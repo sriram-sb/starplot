@@ -20,12 +20,13 @@ def read_star_dat(dat_fp: Path) -> pd.DataFrame:
         # Logical*4 MPROP=1    1 if proper motion is included
         #             0 if no proper motion is included
         # Integer*4 NMAG=-1    Number of magnitudes present
-        #             -1=J2000 instead of B1950
         # Integer*4 NBENT=32    Number of bytes per star entry
         raw_header = f.read(28)
-        header: tuple[int] = struct.unpack("<7i", raw_header)
+        star0, star1, starn, stnum, mprop, nmmag, nbent = struct.unpack(
+            "<7i", raw_header
+        )
 
-        num_stars: int = int(-header[2])  # negative indicates J2000 coords
+        num_stars: int = int(abs(starn))
         for _ in range(num_stars):
             # Unpack each entry (32 bytes) in the following format:
             # Real*4 XNO		Catalog number of star
@@ -35,7 +36,7 @@ def read_star_dat(dat_fp: Path) -> pd.DataFrame:
             # Integer*2 MAG		V Magnitude * 100
             # Real*4 XRPM		R.A. proper motion (radians per year)
             # Real*4 XDPM		Dec. proper motion (radians per year)
-            raw_data = f.read(32)
+            raw_data = f.read(nbent)
             (
                 xno,
                 sra0,
@@ -61,7 +62,7 @@ def read_star_dat(dat_fp: Path) -> pd.DataFrame:
                     "XRPM": xrpm,
                     "XDPM": xdpm,
                 },
-                index=[xno]
+                index=[xno],
             )
             df = pd.concat([df, new_row])
 
