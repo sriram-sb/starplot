@@ -77,7 +77,7 @@ def read_star_dat(dat_fp: Path) -> pd.DataFrame:
 
 def compute_star_pos(star_df: pd.DataFrame):
     # Radius of celestial sphere
-    R = 1000
+    R = 10000
     # Positions of stars in not-to-scale celestial sphere
     star_df["x"] = R * np.cos(star_df["DE"]) * np.cos(star_df["RA"])
     star_df["y"] = R * np.cos(star_df["DE"]) * np.sin(star_df["RA"])
@@ -143,12 +143,12 @@ def plot_sphere(star_df: pd.DataFrame):
             xaxis=dict(visible=False),
             yaxis=dict(visible=False),
             zaxis=dict(visible=False),
-            aspectmode="data",
+            # aspectmode="data",
         ),
         margin=dict(l=0, r=0, b=0, t=0),
     )
 
-    fig.show()
+    fig.write_html("test.html")
 
 
 def main():
