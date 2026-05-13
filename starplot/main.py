@@ -8,6 +8,9 @@ import plotly.graph_objects as go
 from astropy import units as u
 from astropy.coordinates import EarthLocation
 from astropy.time import Time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 def read_star_dat(dat_fp: Path) -> pd.DataFrame:
@@ -64,7 +67,7 @@ def read_star_dat(dat_fp: Path) -> pd.DataFrame:
                     "RA": sra0,
                     "DE": sdec0,
                     "IS": spec,
-                    "MAG": mag,
+                    "MAG": mag / 100.0,
                     "XRPM": xrpm,
                     "XDPM": xdpm,
                 },
@@ -84,8 +87,8 @@ def compute_star_pos(star_df: pd.DataFrame):
     star_df["z"] = R * np.sin(star_df["DE"])
 
     # Get longitude and latitude from OS
-    lon_deg = float(os.environ.get("longitude"))
-    lat_deg = float(os.environ.get("latitude"))
+    lon_deg = float(os.getenv("longitude"))
+    lat_deg = float(os.getenv("latitude"))
     lat_rad = np.radians(lat_deg)
 
     # Get Greenwich apparent sidereal time from Astropy
@@ -105,6 +108,9 @@ def compute_star_pos(star_df: pd.DataFrame):
     star_df["visibility_color"] = np.where(
         star_df["altitude"] > 0, "lime", "rgba(255, 255, 255, 0.2)"
     )
+
+    # use apparent visibility to show star size differently
+    star_df["marker_size"] = 3.0 * (10 ** (-0.1 * star_df["MAG"]))
 
 
 def plot_sphere(star_df: pd.DataFrame):
@@ -130,7 +136,12 @@ def plot_sphere(star_df: pd.DataFrame):
         y=star_df["y"],
         z=star_df["z"],
         mode="markers",
-        marker=dict(size=2, color=star_df["visibility_color"], opacity=0.8),
+        marker=dict(
+            size=star_df["marker_size"],
+            color=star_df["visibility_color"],
+            opacity=0.9,
+            line=dict(width=0),
+        ),
         text=star_df["NO"],
         name="Stars",
     )
